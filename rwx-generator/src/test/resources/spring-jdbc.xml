@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-4.3.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context-4.3.xsd
+        http://www.springframework.org/schema/tx
+     	http://www.springframework.org/schema/tx/spring-tx-4.3.xsd
+		http://www.springframework.org/schema/aop
+		http://www.springframework.org/schema/aop/spring-aop-4.3.xsd">
+
+    <tx:annotation-driven/>
+    <!-- Import Properties -->
+    <context:property-placeholder location="classpath*:rwx.properties"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="initialSize" value="${jdbc.initialSize}"/>
+        <property name="maxActive" value="${jdbc.maxActive}"/>
+        <property name="proxyFilters">
+            <list>
+                <ref bean="stat-filter"/>
+                <!--过滤永真条件 防止注入-->
+                <ref bean="wall-filter"/>
+            </list>
+        </property>
+        <property name="connectionInitSqls" value="set names utf8mb4;"/>
+    </bean>
+
+    <bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+        <property name="slowSqlMillis" value="1000"/>
+        <property name="logSlowSql" value="true"/>
+        <property name="mergeSql" value="true"/>
+    </bean>
+
+    <bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+        <property name="dbType" value="mysql"/>
+        <property name="config" ref="wall-filter-config"/>
+    </bean>
+
+    <bean id="wall-filter-config" class="com.alibaba.druid.wall.WallConfig">
+        <property name="multiStatementAllow" value="true"/>
+    </bean>
+
+    <bean id="druid-stat-interceptor" class="com.alibaba.druid.support.spring.stat.DruidStatInterceptor"/>
+    <bean id="druid-stat-pointcut" class="org.springframework.aop.support.JdkRegexpMethodPointcut" scope="prototype">
+        <property name="patterns">
+            <list>
+                <value>cn.whaleride.controller.*</value>
+                <value>cn.whaleride.service.*</value>
+            </list>
+        </property>
+    </bean>
+    <aop:config>
+        <aop:advisor advice-ref="druid-stat-interceptor" pointcut-ref="druid-stat-pointcut"/>
+    </aop:config>
+
+    <!-- 配置事务管理器 -->
+    <bean id="transactionManager"
+          class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- JDBC配置 -->
+    <bean id="namedParameterJdbcTemplate"
+          class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg ref="dataSource"/>
+    </bean>
+
+    <!-- SqlSessionFactory MyBatis Config -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+        <property name="mapperLocations" value="classpath:mybatis-mapper/*.xml"/>
+        <property name="configuration">
+            <bean class="org.apache.ibatis.session.Configuration">
+                <!--缓存配置的全局开关：如果这里设置成false，那么即便在映射器中配置开启也无济于事 -->
+                <property name="cacheEnabled" value="true" />
+                <!--延时加载的全局开关 -->
+                <property name="lazyLoadingEnabled" value="false" />
+                <!-- 是否允许单一语句返回多结果集 -->
+                <property name="multipleResultSetsEnabled" value="false" />
+                <!-- 使用列标签代替列名，需要兼容驱动 -->
+                <property name="useColumnLabel" value="true" />
+                <!-- 允许JDBC自动生成主键，需要驱动兼容。如果设置为true，则这个设置强制使用自动生成主键，尽管一些驱动不能兼容但仍能正常工作 -->
+                <property name="useGeneratedKeys" value="false" />
+                <!-- 指定MyBatis该如何自动映射列到字段或属性：NONE表示取消自动映射；PARTIAL表示只会自动映射，没有定义嵌套结果集和映射结果集；FULL会自动映射任意复杂的结果集，无论是否嵌套 -->
+                <property name="autoMappingBehavior" value="PARTIAL" />
+                <!-- 配置默认的执行器：SIMPLE是普通的执行器；REUSE会重用预处理语句；BATCH会重用语句并执行批量更新 -->
+                <property name="defaultExecutorType" value="SIMPLE" />
+                <!--设置超时时间：它决定驱动等待数据库响应的秒数,任何正整数 -->
+                <!-- <setting name="defaultStatementTimeout" value="25"/> -->
+                <!--设置数据库驱动程序默认返回的条数限制，此参数可以重新设置,任何正整数 -->
+                <!-- <setting name="defaultFetchSize" value="100" /> -->
+                <!-- 允许在嵌套语句中使用分页（RowBounds） -->
+                <property name="safeRowBoundsEnabled" value="false" />
+                <!-- 是否开启自动驼峰命名规则，即从a_example到aExample的映射 -->
+                <property name="mapUnderscoreToCamelCase" value="true" />
+                <!-- 本地缓存机制，防止循环引用和加速重复嵌套循环 -->
+                <property name="localCacheScope" value="SESSION" />
+                <!-- 当没有为参数提供特定JDBC类型时，为空值指定JDBC类型。某些驱动需要指定列的JDBC类型，多数情况直接用一般类型即可，如NULL/VARCHAR/OTHER -->
+                <property name="jdbcTypeForNull" value="OTHER" />
+                <!-- 指定触发延迟加载的方法，如equals/clone/hashCode/toString -->
+                <property name="lazyLoadTriggerMethods" value="equals" />
+            </bean>
+        </property>
+    </bean>
+
+    <!--配置sqlSessionTemplate：通过带参数的构造方法创建对象 -->
+    <bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+         <!-- 以sqlSessionFactory为参数传入构造函数中 -->
+         <constructor-arg ref="sqlSessionFactory" />
+         <!-- mybatis执行器，取值范围是SIMPLE/REUSE/BATCH三种类型 -->
+         <constructor-arg value="BATCH" />
+    </bean>
+
+    <!-- MyBatis Mapper Scan Config  -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.whaleride.mapper"/>
+        <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory"/>
+        <property name="sqlSessionTemplateBeanName" value="sqlSessionTemplate"/>
+    </bean>
+</beans>
