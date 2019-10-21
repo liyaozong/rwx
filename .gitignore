@@ -1,3 +1,9 @@
+rwx-callcentor/
+rwx-homepage/
+rwx-scratch/
+rwx-shop/
+*.iml
+.idea/
 target/
 pom.xml.tag
 pom.xml.releaseBackup
