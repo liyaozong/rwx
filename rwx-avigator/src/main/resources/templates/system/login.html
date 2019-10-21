@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="zh_CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <!-- Meta, title, CSS, favicons, etc. -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Whaleride RWX!</title>
+
+    <!-- Bootstrap -->
+    <link href="/vendors/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="/vendors/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+    <!-- NProgress -->
+    <link href="/vendors/nprogress/nprogress.css" rel="stylesheet">
+    <!-- Animate.css -->
+    <link href="/vendors/animate.css/animate.min.css" rel="stylesheet">
+    <!-- PNotify -->
+    <link href="/vendors/pnotify/3.2.1/PNotifyBrightTheme.css" rel="stylesheet">
+
+    <!-- Custom Theme Style -->
+    <link href="/static/css/custom.min.css" rel="stylesheet">
+</head>
+
+<body class="login">
+<div>
+    <div style="text-align: center; padding-top: 60px">
+        <h1><i class="fa fa-paw"></i> <span th:text="#{rwx.title}">Whaleride Rwx</span></h1>
+        <p>Whaleride RWX 是完全自主开发的快速开发平台</p>
+    </div>
+
+    <a class="hiddenanchor" id="signup"></a>
+    <a class="hiddenanchor" id="signin"></a>
+
+    <div class="login_wrapper">
+        <div class="animate form login_form">
+            <section class="login_content">
+                <form id="signinForm">
+                    <h1>登录系统</h1>
+                    <div>
+                        <input type="text" class="form-control" placeholder="用户名" name="username" required="" />
+                    </div>
+                    <div>
+                        <input type="password" class="form-control" placeholder="密码" name="password" required="" />
+                    </div>
+                    <div>
+                        <div style="width: 60%; float: left">
+                            <input type="text" class="form-control" placeholder="验证码" name="captcha" required="" />
+                        </div>
+                        <div style="width: 40%; float: left; padding-left: 10px">
+                            <img id="captcha" src="/captcha.jpg" style="cursor: pointer" alt="点击刷新验证码" onclick="getCaptcha()" />
+                        </div>
+                    </div>
+                    <div class="clearfix"></div>
+                    <div>
+                        <span id="message"></span>
+                    </div>
+                    <div>
+                        <button id="login" class="btn btn-primary submit">登录系统</button>
+                        <a class="reset_pass" href="#">忘记密码？</a>
+                    </div>
+
+                    <div class="clearfix"></div>
+
+                    <div class="separator">
+                        <p class="change_link">没有账号？
+                            <a href="#signup" class="to_register" th:text="#{rwx.createaccount}"> Create Account </a>
+                        </p>
+
+                        <div class="clearfix"></div>
+                        <br />
+
+                        <div>
+                            <p>Copyright ©2019 Whaleride出品</p>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+
+        <div id="register" class="animate form registration_form">
+            <section class="login_content">
+                <form id="signupForm">
+                    <h1>创建账号</h1>
+                    <div>
+                        <input type="text" class="form-control" placeholder="用户名" required="" />
+                    </div>
+                    <div>
+                        <input type="email" class="form-control" placeholder="Email" required="" />
+                    </div>
+                    <div>
+                        <input type="password" class="form-control" placeholder="密码" required="" />
+                    </div>
+                    <div>
+                        <button id="create" class="btn btn-primary submit" href="index.html">创建账号</button>
+                    </div>
+
+                    <div class="clearfix"></div>
+
+                    <div class="separator">
+                        <p class="change_link">已有账号？
+                            <a href="#signin" class="to_register"> 登录 </a>
+                        </p>
+
+                        <div class="clearfix"></div>
+                        <br />
+
+                        <div>
+                            <p>Copyright ©2019 Whaleride出品</p>
+                        </div>
+                    </div>
+                </form>
+            </section>
+        </div>
+    </div>
+</div>
+<!-- jQuery -->
+<script src="/vendors/jquery/dist/jquery.min.js"></script>
+<!-- Bootstrap -->
+<script src="/vendors/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/vendors/validate/jquery.validate.min.js"></script>
+<script src="/vendors/validate/messages_zh.min.js"></script>
+<!-- PNotify -->
+<script src="/vendors/pnotify/3.2.1/PNotify.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        var icon = "<i class='fa fa-times-circle'></i>";
+        $("#signinForm").validate({
+            rules: {
+                username: { required: true },
+                password: { required: true },
+                captcha: { required: true }
+            },
+            messages: {
+                username: { required: icon + "请输入用户名" },
+                password: { required: icon + "请输入密码" },
+                captcha: { required: icon + "请输入验证码" }
+            },
+            errorPlacement: function(error, element) {
+                // 位置默认在输入框右侧
+                error.appendTo(element.parent());
+            },
+            submitHandler:function() {
+                $.ajax({
+                    type: "POST",
+                    url: "/login",
+                    dataType: "json",
+                    data: $('#signinForm').serialize(),
+                    success: function (data) {
+                        if (data.code === 0) {
+                            window.location.href = '/sys/dashboard';
+                        } else {
+                            PNotify.error({
+                                title: '失败',
+                                text: data.message,
+                                styling: 'bootstrap3'
+                            });
+                        }
+                    }
+                });
+            }
+        })
+    });
+
+    function getCaptcha() {
+        $("#captcha").attr("src");
+        $("#captcha").attr("src","/captcha.jpg?"+Math.random());
+    }
+</script>
+</body>
+</html>

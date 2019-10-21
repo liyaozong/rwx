@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh_CN" xmlns:th="http://www.thymeleaf.org"
+      xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head th:replace="layout :: common_header(~{::title},~{::link})">
+    <title>用户管理</title>
+
+    <!-- icheck -->
+    <link href="/vendors/iCheck/skins/flat/green.css" rel="stylesheet">
+    <!-- table plugins -->
+    <link href="/vendors/bootstrap-table/1.15.4/bootstrap-table.min.css" rel="stylesheet">
+    <link href="/vendors/jquery-treegrid/0.2.0/jquery.treegrid.min.css" rel="stylesheet">
+    <!-- PNotify -->
+    <link href="/vendors/pnotify/3.2.1/PNotifyBrightTheme.css" rel="stylesheet">
+</head>
+
+<body class="nav-md">
+<div class="container body">
+    <div class="main_container">
+        <!-- left bar -->
+        <div th:replace="layout :: common_leftbar(${username}, ${menu_tree})"></div>
+        <!-- top navigation -->
+        <div th:replace="layout :: common_topnav(${username})"></div>
+
+        <!-- page content -->
+        <div class="right_col" role="main">
+            <div class="page-title">
+                <div class="title_left">
+                    <h3>用户管理 <small>system user management</small></h3>
+                </div>
+
+                <div class="title_right">
+                    <div class="col-md-5 col-sm-5 col-xs-12 form-group pull-right top_search">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search for...">
+                            <span class="input-group-btn">
+                                        <button class="btn btn-default" type="button">Go!</button>
+                                    </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="clearfix"></div>
+
+            <div class="row">
+                <div class="col-md-12 col-sm-12 col-xs-12">
+                    <!-- modals -->
+                    <div class="modal fade data-dialog" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <form id="data-form" class="form-horizontal form-label-left">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">×</span>
+                                        </button>
+                                        <h4 class="modal-title" id="dialog-title">添加菜单</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <input id="parentId" name="parentId" type="hidden"/>
+                                        <input id="menuId" name="menuId" type="hidden"/>
+
+                                        <div class="form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">菜单名称</label>
+                                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <input id="menuName" name="menuName" type="text" class="form-control" placeholder="Default Input">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">菜单图标</label>
+                                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <input id="icon" name="icon" type="text" class="form-control" placeholder="fa-plus">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">地址URL</label>
+                                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <input id="url" name="url" type="text" class="form-control" placeholder="sys/menu">
+                                            </div>
+                                        </div>
+                                        <div class="control-group">
+                                            <label class="control-label col-md-3 col-sm-3 col-xs-12">权限标识</label>
+                                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <input id="perms" name="perms" type="text" class="tags form-control" placeholder="sys:menu" />
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="col-md-3 col-sm-3 col-xs-12 control-label">菜单类型</label>
+
+                                            <div class="col-md-9 col-sm-9 col-xs-12">
+                                                <div class="radio">
+                                                    <label>
+                                                        <input type="radio" class="flat" name="type" checked value="0"> 目录
+                                                    </label>
+                                                </div>
+                                                <div class="radio">
+                                                    <label>
+                                                        <input type="radio" class="flat" name="type" value="1"> 菜单
+                                                    </label>
+                                                </div>
+                                                <div class="radio">
+                                                    <label>
+                                                        <input type="radio" class="flat" name="type" value="2"> 按钮
+                                                    </label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                                        <button type="submit" class="btn btn-primary">提交</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /modals -->
+                    <button type="button" class="btn btn-primary">添加用户</button>
+                    <div class="table-responsive" style="overflow-y: hidden">
+                        <table id="data-table" data-mobile-responsive="true" class="table table-striped jambo_table bulk_action">
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /page content -->
+
+        <!-- footer content -->
+        <div th:replace="layout :: common_footer"></div>
+    </div>
+</div>
+
+<div th:replace="layout :: common_script(~{::script})">
+    <!-- icheck -->
+    <script src="/vendors/iCheck/icheck.min.js"></script>
+    <!-- table plugins -->
+    <script src="/vendors/bootstrap-table/1.15.4/bootstrap-table.min.js"></script>
+    <script src="/vendors/bootstrap-table/1.15.4/extensions/treegrid/bootstrap-table-treegrid.min.js"></script>
+    <script src="/vendors/jquery-treegrid/0.2.0/jquery.treegrid.min.js"></script>
+    <!-- PNotify -->
+    <script src="/vendors/pnotify/3.2.1/PNotify.js"></script>
+    <script src="/vendors/pnotify/3.2.1/PNotifyButtons.js"></script>
+    <script src="/vendors/pnotify/3.2.1/PNotifyConfirm.js"></script>
+    <!-- validate -->
+    <script src="/vendors/jquery-validate/1.19.1/jquery.validate.min.js"></script>
+    <script src="/vendors/jquery-validate/1.19.1/localization/messages_zh.min.js"></script>
+    <!-- Custom Theme Scripts -->
+    <script src="/static/js/system/user.js"></script>
+</div>
+</body>
+</html>
